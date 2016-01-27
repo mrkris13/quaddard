@@ -1,0 +1,4 @@
+# ROS autogens
+devel/
+build/
+.catkin_workspace
