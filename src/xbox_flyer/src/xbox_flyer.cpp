@@ -322,7 +322,15 @@ int main(int argc, char** argv)
 
   XboxFlyer flyer;
 
-  ros::spin();
+  // Loop at 100Hz
+  ros::Rate r(100);
+  while (ros::ok())
+  {
+    ros::spinOnce();
+    flyer.spinOnce();
+
+    r.sleep();
+  }
 
   return 0;
 }
