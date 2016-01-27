@@ -5,4 +5,4 @@ source /opt/ros/indigo/setup.bash
 source $HOME/quaddard/devel/setup.bash
 
 # define aliases
-alias cdfsw='cd $HOME/quaddard/fsw'
+alias cdquaddard='cd $HOME/quaddard/'
