@@ -1,0 +1,21 @@
+<launch>
+
+  <!-- launch mavros -->
+  <include file="$(find mavros)/launch/px4.launch" >
+    <arg name="fcu_url" value="/dev/ttyUSBpx4:921600" />
+  </include>
+
+  <!-- launch joy -->
+  <node pkg="joy" type="joy_node" name="joy_node" >
+    <param name="dev" type="string" value="/dev/input/js0" />
+    <param name="deadzone" value="0.18" />
+    <param name="autorepeat_rate" value="100" />
+  </node>
+
+  <!-- launch xbox_flyer -->
+  <node pkg="xbox_flyer" type="xbox_flyer" name="xbox_flyer" >
+    <param name="max_arming_throttle" value="0.05" />
+    <remap from="joy_in" to="/joy" />
+  </node>
+
+</launch>
