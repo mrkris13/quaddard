@@ -51,6 +51,14 @@ private:
   bool _joy_good;
   bool _joy_bttn_pressed_arm;
 
+  // current cmd
+  float _cmd_throttle;
+  float _cmd_roll;
+  float _cmd_pitch;
+  float _cmd_yaw;
+
+  bool _cmd_toggle_arming;
+
   // params
   float _max_arming_throttle;
 
@@ -115,61 +123,47 @@ XboxFlyer::~XboxFlyer()
 
 void XboxFlyer::spinOnce()
 {
-  // Check for just released buttons
-  if (_joy.buttons[JOY_BTTN_ARM])
-  {
-    if (!_joy_bttn_pressed_arm)
-    {
-      _joy_bttn_pressed_arm = true;
-    }
-  }
-  else
-  {
-    if (_joy_bttn_pressed_arm)
-    {
-      attempt_toggle_arming();
-    }
-    _joy_bttn_pressed_arm = false;
-  }
-
-  // If connected, try to enter offboard mode
   if (_connected)
   {
+    // Try to enter offboard mode if we're not there already
     if (!_offboard_mode)
     {
       attempt_offboard_mode();
     }
+
+    if (_cmd_toggle_arming)
+    {
+      attempt_toggle_arming();
+    }
+
+    // Publish attitude setpoint
+    if (_joy_good)
+    {
+      mavros_msgs::AttitudeTarget sp_att;
+
+      sp_att.header.stamp = ros::Time::now();
+      sp_att.header.frame_id = "fcu";
+
+      sp_att.type_mask = mavros_msgs::AttitudeTarget::IGNORE_ROLL_RATE | mavros_msgs::AttitudeTarget::IGNORE_PITCH_RATE | mavros_msgs::AttitudeTarget::IGNORE_YAW_RATE;
+      sp_att.body_rate.x = 0.0;
+      sp_att.body_rate.y = 0.0;
+      sp_att.body_rate.z = 0.0;
+
+      sp_att.thrust = _cmd_throttle;
+
+      Eigen::Quaternionf q;
+      euler2quat(_cmd_roll, _cmd_pitch, _cmd_yaw, q);
+
+      sp_att.orientation.w = q.w();
+      sp_att.orientation.x = q.x();
+      sp_att.orientation.y = q.y();
+      sp_att.orientation.z = q.z();
+
+      _pub_setpoint_raw.publish(sp_att);
+    }
   }
 
-  // Publish attitude setpoint
-  if (_joy_good)
-  {
-    mavros_msgs::AttitudeTarget sp_att;
-
-    sp_att.header.stamp = ros::Time::now();
-    sp_att.header.frame_id = "fcu";
-
-    sp_att.type_mask = mavros_msgs::AttitudeTarget::IGNORE_ROLL_RATE | mavros_msgs::AttitudeTarget::IGNORE_PITCH_RATE | mavros_msgs::AttitudeTarget::IGNORE_YAW_RATE;
-    sp_att.body_rate.x = 0.0;
-    sp_att.body_rate.y = 0.0;
-    sp_att.body_rate.z = 0.0;
-
-    sp_att.thrust = _joy.axes[JOY_AXIS_THROTTLE]*0.5 + 0.5;
-
-    float pitch = _joy.axes[JOY_AXIS_PITCH]*M_PI_2;
-    float roll = _joy.axes[JOY_AXIS_ROLL]*M_PI_2;
-    float yaw = _joy.axes[JOY_AXIS_YAW]*M_PI;
-
-    Eigen::Quaternionf q;
-    euler2quat(roll, pitch, yaw, q);
-
-    sp_att.orientation.w = q.w();
-    sp_att.orientation.x = q.x();
-    sp_att.orientation.y = q.y();
-    sp_att.orientation.z = q.z();
-
-    _pub_setpoint_raw.publish(sp_att);
-  }
+  return;
 }
 
 void XboxFlyer::attempt_toggle_arming()
@@ -239,6 +233,29 @@ void XboxFlyer::sub_joy_cb(const sensor_msgs::Joy& joy)
 {
   _joy_good = true;
   _joy = sensor_msgs::Joy(joy);
+
+
+  _cmd_throttle = (_joy.axes[JOY_AXIS_THROTTLE] + 0.5) * 1.0;
+
+  _cmd_pitch    = _joy.axes[JOY_AXIS_PITCH] * M_PI_2;
+  _cmd_roll     = _joy.axes[JOY_AXIS_ROLL]  * M_PI_2;
+  _cmd_yaw      = _joy.axes[JOY_AXIS_YAW]   * M_PI;
+
+
+  // Check for just released buttons
+  if (joy.buttons[JOY_BTTN_ARM])
+  {
+    if (!_joy_bttn_pressed_arm)
+    {
+      _joy_bttn_pressed_arm = true;
+    }
+  }
+  else
+  {
+    _joy_bttn_pressed_arm = false;
+    _cmd_toggle_arming = true;
+  }
+
   return;
 }
 
