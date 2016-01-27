@@ -1,13 +1,16 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(xbox_flyer)
 
-find_package(catkin REQUIRED roscpp sensor_msgs mavros_msgs)
+find_package(catkin REQUIRED roscpp sensor_msgs mavros_msgs mavlink geometry_msgs)
+
+find_package(Eigen3 REQUIRED)
 
 catkin_package(
 )
 
 include_directories(
   ${catkin_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIR}
   )
 
 add_executable(xbox_flyer src/xbox_flyer.cpp)
