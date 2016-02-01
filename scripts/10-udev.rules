@@ -1,0 +1,5 @@
+# place this file in /etc/udev/rules.d/
+
+# pixhawk serial
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", NAME="px4", SYMLINK="ttyUSBpx4"
+
