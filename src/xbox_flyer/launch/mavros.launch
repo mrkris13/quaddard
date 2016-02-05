@@ -1,0 +1,10 @@
+<launch>
+
+  <arg name="fcu_url"   default="/dev/ttyUSBpx4:921600" />
+
+  <include file="$(find mavros)/launch/px4.launch" >
+    <param name="fcu_url"                 value="$(arg fcu_url)" />
+    <param name="startup_px4_usb_quirk"   value="false" />
+  </include>
+
+</launch>
