@@ -1,3 +1,3 @@
-[submodule "PX4Firmware"]
-	path = PX4Firmware
-	url = git@github.com:mrkris13/PX4Firmware.git
+[submodule "Firmware"]
+	path = Firmware
+	url = git@github.com:mrkris13/Firmware.git
